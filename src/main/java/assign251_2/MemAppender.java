@@ -18,11 +18,13 @@ public final class MemAppender extends AbstractAppender {
     private static MemAppender instance;
 
     private final List<LogEvent> events;
+    private final Layout<? extends Serializable> layout;
     private int maxSize = DEFAULT_MAX_SIZE;
     private long discardedLogCount;
 
     private MemAppender(List<LogEvent> events, Layout<? extends Serializable> layout) {
-        super(NAME, null, layout, true, Property.EMPTY_ARRAY);   // [일반] AbstractAppender 생성자
+        super(NAME, null, layout, true, Property.EMPTY_ARRAY);
+        this.layout = layout;
         this.events = Objects.requireNonNull(events, "events list must not be null");
     }
 
@@ -49,7 +51,9 @@ public final class MemAppender extends AbstractAppender {
     }
 
     public synchronized List<String> getEventStrings() {
-        Layout<? extends Serializable> layout = requireLayout();
+        if (layout == null) {
+            throw new IllegalStateException("Layout is not set in MemAppender.");
+        }
         return events.stream()
                 .map(event -> layout.toSerializable(event).toString())
                 .toList();
@@ -81,14 +85,6 @@ public final class MemAppender extends AbstractAppender {
             events.remove(0);
             discardedLogCount++;
         }
-    }
-
-    private Layout<? extends Serializable> requireLayout() {
-        Layout<? extends Serializable> layout = getLayout();
-        if (layout == null) {
-            throw new IllegalStateException("A layout is required for this operation");
-        }
-        return layout;
     }
 
 }

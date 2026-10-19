@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,9 +24,9 @@ class MemAppenderTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        resetForTesting();
+         MemAppenderTestSupport.resetInstance();
         injectedList = new ArrayList<>();
-        PatternLayout layout = PatternLayout.newBuilder().withPattern("%p %m").build(); // [일반] 내장 Layout 생성법
+        PatternLayout layout = PatternLayout.newBuilder().withPattern("%p %m").build();
         appender = MemAppender.getInstance(injectedList, layout);
         appender.start();
 
@@ -41,12 +40,6 @@ class MemAppenderTest {
     void tearDown() {
         logger.removeAppender(appender);
         appender.stop();
-    }
-
-    private static void resetForTesting() throws ReflectiveOperationException {
-        Field instanceField = MemAppender.class.getDeclaredField("instance");
-        instanceField.setAccessible(true);
-        instanceField.set(null, null);
     }
 
     @Test
@@ -63,7 +56,7 @@ class MemAppenderTest {
 
     @Test
     void getInstanceWithDefaultListWorks() throws Exception {
-        resetForTesting();
+        MemAppenderTestSupport.resetInstance();
         MemAppender defaultListAppender =
                 MemAppender.getInstance(PatternLayout.newBuilder().withPattern("%m").build());
         assertTrue(defaultListAppender.getCurrentLogs().isEmpty());
@@ -71,7 +64,7 @@ class MemAppenderTest {
 
     @Test
     void getEventStringsWithoutLayoutThrows() throws Exception {
-        resetForTesting();
+        MemAppenderTestSupport.resetInstance();
         MemAppender noLayout = MemAppender.getInstance(new ArrayList<>(), null);
         assertThrows(IllegalStateException.class, noLayout::getEventStrings);
         assertThrows(IllegalStateException.class, noLayout::printLogs);
